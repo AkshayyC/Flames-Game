@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FLAMES — Find Your Fate</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0a1a;--bg2:#13102b;
+  --accent:#ff6b9d;--accent2:#ffb347;--accent3:#7b5ea7;
+  --text:#f0ecff;--muted:#8a85a8;
+  --card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.09);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d,3s) ease-in-out infinite;opacity:0;}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0.8);}50%{opacity:var(--op,0.6);transform:scale(1.2);}}
+
+.floater{position:fixed;font-size:1.4rem;pointer-events:none;animation:float-up 6s ease-in forwards;z-index:0;}
+@keyframes float-up{0%{opacity:0;transform:translateY(0) rotate(0deg) scale(0.5);}15%{opacity:0.7;}80%{opacity:0.4;}100%{opacity:0;transform:translateY(-110vh) rotate(360deg) scale(1.2);}}
+
+.page{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:2rem 1rem 4rem;}
+
+.hero{text-align:center;margin-bottom:2rem;animation:fadeDown 0.8s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-28px);}to{opacity:1;transform:translateY(0);}}
+.hero-eyebrow{font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,10vw,5.5rem);font-weight:700;line-height:1;background:linear-gradient(135deg,#ff6b9d 0%,#ffb347 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 40px rgba(255,107,157,0.25));}
+.hero-sub{margin-top:0.6rem;font-size:0.9rem;color:var(--muted);font-weight:300;letter-spacing:0.03em;}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:2rem;width:100%;max-width:480px;backdrop-filter:blur(12px);animation:fadeUp 0.9s 0.2s ease both;position:relative;overflow:hidden;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.card::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+
+.input-group{margin-bottom:0.8rem;}
+.input-group label{display:block;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.input-group input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:11px 16px;font-size:1rem;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.25s,box-shadow 0.25s,background 0.25s;}
+.input-group input:focus{border-color:var(--accent);background:rgba(255,107,157,0.07);box-shadow:0 0 0 3px rgba(255,107,157,0.12);}
+.input-group input::placeholder{color:var(--muted);}
+.heart-divider{text-align:center;color:var(--accent);font-size:1.2rem;margin:0.3rem 0 0.8rem;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
+
+.btn{width:100%;padding:13px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#1a0a10;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;letter-spacing:0.04em;cursor:pointer;transition:transform 0.15s,box-shadow 0.25s;box-shadow:0 4px 24px rgba(255,107,157,0.25);margin-top:0.4rem;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,157,0.4);}
+.btn:active{transform:translateY(0) scale(0.98);}
+
+.flames-row{display:flex;justify-content:center;gap:10px;margin:1.6rem 0 0.4rem;}
+.fl-box{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--muted);transition:all 0.4s cubic-bezier(.34,1.56,.64,1);}
+.fl-box.eliminated{opacity:0.15;text-decoration:line-through;transform:scale(0.82);}
+.fl-box.winner{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a10;border-color:transparent;box-shadow:0 0 28px rgba(255,107,157,0.5);transform:scale(1.18) translateY(-4px);animation:winner-pop 0.5s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes winner-pop{from{transform:scale(0.5) translateY(0);opacity:0;}to{transform:scale(1.18) translateY(-4px);opacity:1;}}
+
+#result-section{display:none;text-align:center;padding-top:0.5rem;}
+#anim-stage{width:100%;height:170px;margin:0.8rem 0;}
+#anim-stage svg{width:100%;height:100%;overflow:visible;}
+
+.result-label{font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.result-word{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.result-desc{font-size:0.88rem;color:var(--muted);margin-top:0.4rem;font-style:italic;font-family:'Playfair Display',serif;}
+.count-badge{display:inline-block;margin-top:0.6rem;padding:3px 13px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:999px;font-size:0.72rem;color:var(--muted);}
+.try-again{margin-top:1rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:7px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;transition:all 0.2s;}
+.try-again:hover{border-color:var(--accent);color:var(--accent);}
+
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;animation:confetti-fall 1.8s ease-out forwards;z-index:999;}
+@keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1);}100%{opacity:0;transform:translateY(60vh) rotate(720deg) scale(0.3);}}
+
+@keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+
+
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div class="page">
+  <div class="hero">
+    <p class="hero-eyebrow">Childhood's favourite game</p>
+    <h1>FLAMES</h1>
+    <p class="hero-sub">Friends · Love · Affection · Marriage · Enemies · Siblings</p>
+  </div>
+
+  <div class="card">
+    <div class="input-group">
+      <label>Your Name</label>
+      <input type="text" id="name1" placeholder="e.g. Arun" autocomplete="off"/>
+    </div>
+    <div class="heart-divider">♥</div>
+    <div class="input-group">
+      <label>Their Name</label>
+      <input type="text" id="name2" placeholder="e.g. Priya" autocomplete="off"/>
+    </div>
+    <button class="btn" onclick="calculate()">Reveal the Fate ✦</button>
+
+    <div class="flames-row" id="flames-row">
+      <div class="fl-box" id="fl-F">F</div>
+      <div class="fl-box" id="fl-L">L</div>
+      <div class="fl-box" id="fl-A">A</div>
+      <div class="fl-box" id="fl-M">M</div>
+      <div class="fl-box" id="fl-E">E</div>
+      <div class="fl-box" id="fl-S">S</div>
+    </div>
+
+    <div id="result-section">
+      <div id="anim-stage"></div>
+      <div class="result-label">Your relationship is</div>
+      <div class="result-word" id="res-word"></div>
+      <div class="result-desc" id="res-desc"></div>
+      <div class="count-badge" id="res-count"></div><br/>
+      <button class="try-again" onclick="resetGame()">↺ Try Again</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* Stars */
+const starsEl=document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');s.className='star';
+  const sz=Math.random()*2.5+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--op:${(Math.random()*0.5+0.2).toFixed(2)};animation-delay:${(Math.random()*6).toFixed(1)}s;`;
+  starsEl.appendChild(s);
+}
+
+/* Floaters */
+const sym=['♥','✦','★','♡','✿'];
+function spawnFloater(){
+  const el=document.createElement('div');el.className='floater';
+  el.textContent=sym[Math.floor(Math.random()*sym.length)];
+  el.style.cssText=`left:${Math.random()*100}%;bottom:-40px;color:rgba(255,107,157,${(Math.random()*0.3+0.1).toFixed(2)});animation-duration:${(Math.random()*4+5).toFixed(1)}s;`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),9000);
+}
+setInterval(spawnFloater,1400);spawnFloater();
+
+/* ═══════ SVG SCENES ═══════ */
+
+function svgLove(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="hg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ff6b9d"/><stop offset="100%" stop-color="#e0245e"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- pulsing glow ring -->
+  <circle cx="150" cy="72" r="42" fill="none" stroke="#ff6b9d" stroke-width="1" opacity="0.3">
+    <animate attributeName="r" values="38;52;38" dur="1.4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0;0.4" dur="1.4s" repeatCount="indefinite"/>
+  </circle>
+  <!-- big beating heart -->
+  <g style="transform-origin:150px 72px">
+    <animateTransform attributeName="transform" type="scale" values="1;1.18;1;1.12;1" keyTimes="0;0.14;0.28;0.42;0.7" dur="1s" repeatCount="indefinite" additive="sum"/>
+    <path transform="translate(150,72)" d="M0,11 C0,11 -28,-18 -28,-5 C-28,12 0,36 0,36 C0,36 28,12 28,-5 C28,-18 0,11 0,11Z" fill="url(#hg)" filter="url(#glow)"/>
+  </g>
+  <!-- orbiting dots -->
+  <g><animateTransform attributeName="transform" type="rotate" from="0 150 72" to="360 150 72" dur="3s" repeatCount="indefinite"/><circle cx="200" cy="72" r="5" fill="#ff6b9d" opacity="0.75"/></g>
+  <g><animateTransform attributeName="transform" type="rotate" from="120 150 72" to="480 150 72" dur="3s" repeatCount="indefinite"/><circle cx="200" cy="72" r="4" fill="#ffb347" opacity="0.65"/></g>
+  <g><animateTransform attributeName="transform" type="rotate" from="240 150 72" to="600 150 72" dur="3s" repeatCount="indefinite"/><circle cx="200" cy="72" r="3.5" fill="#c084fc" opacity="0.65"/></g>
+  <!-- sparkle lines -->
+  <g stroke="#ff6b9d" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <line x1="150" y1="22" x2="150" y2="12"><animate attributeName="opacity" values="0.6;1;0.6" dur="0.9s" repeatCount="indefinite"/></line>
+    <line x1="200" y1="42" x2="210" y2="34"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.1s" repeatCount="indefinite"/></line>
+    <line x1="100" y1="42" x2="90" y2="34"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite"/></line>
+  </g>
+  <text x="68" y="130" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#ff9ec4">${n1}</text>
+  <text x="232" y="130" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#ff9ec4">${n2}</text>
+</svg>`;
+}
+
+function svgFriends(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <defs><filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <!-- left figure bouncing -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-7;0,0" dur="0.9s" repeatCount="indefinite"/>
+    <circle cx="85" cy="42" r="16" fill="#67e8f9"/>
+    <rect x="72" y="57" width="26" height="30" rx="6" fill="#67e8f9"/>
+    <line x1="98" y1="65" x2="116" y2="54" stroke="#67e8f9" stroke-width="5" stroke-linecap="round"/>
+    <line x1="72" y1="65" x2="56" y2="76" stroke="#67e8f9" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <!-- right figure bouncing offset -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,3;0,-4;0,3" dur="0.9s" begin="0.15s" repeatCount="indefinite"/>
+    <circle cx="215" cy="42" r="16" fill="#ffb347"/>
+    <rect x="202" y="57" width="26" height="30" rx="6" fill="#ffb347"/>
+    <line x1="202" y1="65" x2="184" y2="54" stroke="#ffb347" stroke-width="5" stroke-linecap="round"/>
+    <line x1="228" y1="65" x2="244" y2="76" stroke="#ffb347" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <!-- hi-five burst -->
+  <circle cx="150" cy="56" r="16" fill="#fde68a" opacity="0" filter="url(#gf)">
+    <animate attributeName="opacity" values="0;0.9;0;0.9;0" dur="1.6s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="8;22;8;22;8" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <g fill="#fde68a">
+    <text x="138" y="46" font-size="14">✦</text>
+    <text x="153" y="38" font-size="11">✦</text>
+    <text x="145" y="30" font-size="9">✦</text>
+  </g>
+  <text x="85" y="130" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#67e8f9">${n1}</text>
+  <text x="215" y="130" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#ffb347">${n2}</text>
+</svg>`;
+}
+
+function svgAffection(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="ag" cx="50%" cy="50%"><stop offset="0%" stop-color="#ff6b9d" stop-opacity="0.15"/><stop offset="100%" stop-color="#ff6b9d" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="150" cy="80" rx="110" ry="55" fill="url(#ag)"/>
+  <!-- left face -->
+  <circle cx="90" cy="70" r="26" fill="#c084fc" opacity="0.9"/>
+  <circle cx="83" cy="64" r="3.5" fill="white" opacity="0.9"/>
+  <circle cx="97" cy="64" r="3.5" fill="white" opacity="0.9"/>
+  <path d="M84,76 Q90,84 96,76" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="80" cy="74" rx="8" ry="5" fill="#ff9ec4" opacity="0.45"/>
+  <ellipse cx="100" cy="74" rx="8" ry="5" fill="#ff9ec4" opacity="0.45"/>
+  <!-- right face -->
+  <circle cx="210" cy="70" r="26" fill="#ff6b9d" opacity="0.9"/>
+  <circle cx="203" cy="64" r="3.5" fill="white" opacity="0.9"/>
+  <circle cx="217" cy="64" r="3.5" fill="white" opacity="0.9"/>
+  <path d="M204,76 Q210,84 216,76" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="200" cy="74" rx="8" ry="5" fill="#ffb3c8" opacity="0.45"/>
+  <ellipse cx="220" cy="74" rx="8" ry="5" fill="#ffb3c8" opacity="0.45"/>
+  <!-- falling petals via animateMotion -->
+  <text font-size="16" fill="#ffb347" text-anchor="middle">
+    <animateMotion path="M120,0 Q130,80 115,145" dur="2s" repeatCount="indefinite"/>🌸</text>
+  <text font-size="13" fill="#ff6b9d" text-anchor="middle">
+    <animateMotion path="M145,0 Q160,90 140,148" dur="2.6s" begin="0.4s" repeatCount="indefinite"/>🌸</text>
+  <text font-size="11" fill="#c084fc" text-anchor="middle">
+    <animateMotion path="M160,0 Q150,85 165,148" dur="2.2s" begin="0.8s" repeatCount="indefinite"/>🌸</text>
+  <text font-size="15" fill="#ffb347" text-anchor="middle">
+    <animateMotion path="M175,0 Q165,80 178,145" dur="3s" begin="0.2s" repeatCount="indefinite"/>🌸</text>
+  <text x="90" y="128" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#d8b4fe">${n1}</text>
+  <text x="210" y="128" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#ff9ec4">${n2}</text>
+</svg>`;
+}
+
+function svgMarriage(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <filter id="gm"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <ellipse cx="150" cy="75" rx="65" ry="32" fill="#f59e0b" opacity="0.08" filter="url(#gm)"/>
+  <!-- left ring sliding in -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="-50,0;0,0" dur="0.9s" calcMode="spline" keySplines="0.34 1.56 0.64 1" fill="freeze"/>
+    <circle cx="118" cy="72" r="26" fill="none" stroke="url(#goldg)" stroke-width="8">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="118" cy="72" r="26" fill="none" stroke="#fde68a" stroke-width="1.5" opacity="0.4"/>
+  </g>
+  <!-- right ring sliding in -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="50,0;0,0" dur="0.9s" calcMode="spline" keySplines="0.34 1.56 0.64 1" fill="freeze"/>
+    <circle cx="182" cy="72" r="26" fill="none" stroke="url(#goldg)" stroke-width="8">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="182" cy="72" r="26" fill="none" stroke="#fde68a" stroke-width="1.5" opacity="0.4"/>
+  </g>
+  <!-- diamond -->
+  <polygon points="118,34 127,48 118,52 109,48" fill="#67e8f9" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.95;0.95" keyTimes="0;0.5;0.7;1" dur="1.5s" fill="freeze"/>
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" begin="1.5s" repeatCount="indefinite"/>
+  </polygon>
+  <!-- sparkles -->
+  <g fill="#fde68a" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.75" keyTimes="0;0.5;1" dur="1.2s" fill="freeze"/>
+    <text x="64" y="52" font-size="15">✦</text>
+    <text x="215" y="52" font-size="13">✦</text>
+    <text x="140" y="20" font-size="11">✦</text>
+    <text x="80" y="100" font-size="9">✦</text>
+    <text x="210" y="100" font-size="12">✦</text>
+  </g>
+  <text x="150" y="128" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#fde68a" opacity="0.9">${n1} &amp; ${n2} 💍</text>
+</svg>`;
+}
+
+function svgEnemies(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="ge"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- intact heart, fades out -->
+  <g transform="translate(150,68)">
+    <path d="M0,10 C0,10 -28,-16 -28,-5 C-28,11 0,34 0,34 C0,34 28,11 28,-5 C28,-16 0,10 0,10Z" fill="#e0245e" filter="url(#ge)">
+      <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.3;0.45" dur="1.1s" fill="freeze"/>
+    </path>
+  </g>
+  <!-- broken left half -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,0;-24,8" dur="0.5s" begin="0.46s" calcMode="spline" keySplines="0.34 1.56 0.64 1" fill="freeze"/>
+    <animateTransform attributeName="transform" type="rotate" values="0 150 68;-20 150 68" dur="0.5s" begin="0.46s" fill="freeze" additive="sum"/>
+    <path transform="translate(150,68)" d="M0,10 C0,10 -28,-16 -28,-5 C-28,11 0,34 0,34 L0,10Z" fill="#e0245e" opacity="0">
+      <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.44;0.5" dur="1.1s" fill="freeze"/>
+    </path>
+  </g>
+  <!-- broken right half -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,0;24,8" dur="0.5s" begin="0.46s" calcMode="spline" keySplines="0.34 1.56 0.64 1" fill="freeze"/>
+    <animateTransform attributeName="transform" type="rotate" values="0 150 68;20 150 68" dur="0.5s" begin="0.46s" fill="freeze" additive="sum"/>
+    <path transform="translate(150,68)" d="M0,10 L0,34 C0,34 28,11 28,-5 C28,-16 0,10 0,10Z" fill="#be123c" opacity="0">
+      <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.44;0.5" dur="1.1s" fill="freeze"/>
+    </path>
+  </g>
+  <!-- crack flash -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;1;0.9" keyTimes="0;0.44;0.5;0.55" dur="1.1s" fill="freeze"/>
+    <line x1="150" y1="36" x2="150" y2="98" stroke="white" stroke-width="2" stroke-dasharray="5,3"/>
+  </g>
+  <!-- arrow flying in from left -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="-130,0;0,0" dur="0.4s" calcMode="spline" keySplines="0.4 0 0.2 1" fill="freeze"/>
+    <line x1="62" y1="68" x2="144" y2="68" stroke="#ff4444" stroke-width="3.5" stroke-linecap="round"/>
+    <polygon points="144,60 162,68 144,76" fill="#ff4444"/>
+    <line x1="74" y1="68" x2="70" y2="60" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+    <line x1="74" y1="68" x2="70" y2="76" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+    <line x1="84" y1="68" x2="80" y2="61" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+    <line x1="84" y1="68" x2="80" y2="75" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- lightning + angry figures -->
+  <text x="38" y="54" font-size="24" fill="#fbbf24" opacity="0.85">⚡</text>
+  <text x="220" y="54" font-size="20" fill="#fbbf24" opacity="0.85">⚡</text>
+  <!-- angry face left -->
+  <circle cx="52" cy="100" r="20" fill="#7f1d1d" opacity="0.9"/>
+  <path d="M44,93 L50,98" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M50,93 L56,98" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M44,108 Q52,103 60,108" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- angry face right -->
+  <circle cx="248" cy="100" r="20" fill="#7f1d1d" opacity="0.9"/>
+  <path d="M240,93 L246,98" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M246,93 L252,98" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M240,108 Q248,103 256,108" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <text x="52" y="134" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#ff4444">${n1}</text>
+  <text x="248" y="134" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#ff4444">${n2}</text>
+</svg>`;
+}
+
+function svgSiblings(n1,n2){
+  return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- dashed arc above -->
+  <path d="M55,105 Q150,10 245,105" stroke="#67e8f9" stroke-width="1.5" fill="none" opacity="0.25" stroke-dasharray="6,5"/>
+  <!-- left sibling bouncing -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-9;0,0" dur="0.95s" repeatCount="indefinite"/>
+    <circle cx="88" cy="50" r="20" fill="#c084fc"/>
+    <rect x="74" y="68" width="28" height="32" rx="7" fill="#c084fc"/>
+    <circle cx="83" cy="44" r="3" fill="white" opacity="0.9"/>
+    <circle cx="93" cy="44" r="3" fill="white" opacity="0.9"/>
+    <path d="M83,56 Q88,63 94,56" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="102" y1="76" x2="120" y2="82" stroke="#c084fc" stroke-width="5" stroke-linecap="round"/>
+    <line x1="74" y1="76" x2="56" y2="82" stroke="#c084fc" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <!-- right sibling bouncing offset -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,4;0,-5;0,4" dur="0.95s" begin="0.18s" repeatCount="indefinite"/>
+    <circle cx="212" cy="50" r="20" fill="#67e8f9"/>
+    <rect x="198" y="68" width="28" height="32" rx="7" fill="#67e8f9"/>
+    <circle cx="207" cy="44" r="3" fill="white" opacity="0.9"/>
+    <circle cx="217" cy="44" r="3" fill="white" opacity="0.9"/>
+    <path d="M207,56 Q212,63 218,56" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="198" y1="76" x2="180" y2="82" stroke="#67e8f9" stroke-width="5" stroke-linecap="round"/>
+    <line x1="226" y1="76" x2="244" y2="82" stroke="#67e8f9" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <!-- stars between them -->
+  <g fill="#fde68a">
+    <text x="136" y="44" font-size="13">★</text>
+    <text x="150" y="34" font-size="10">★</text>
+    <text x="162" y="46" font-size="12">✦</text>
+    <text x="145" y="56" font-size="8">✦</text>
+  </g>
+  <!-- hug arc -->
+  <path d="M116,90 Q150,112 184,90" stroke="#fde68a" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <text x="88" y="134" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#d8b4fe">${n1}</text>
+  <text x="212" y="134" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#67e8f9">${n2}</text>
+</svg>`;
+}
+
+/* ════ DATA ════ */
+const DATA={
+  F:{label:'Friends',   desc:'A bond of trust, laughter & shared memories forever.', svg:svgFriends,   confetti:false},
+  L:{label:'Love',      desc:'Hearts entwined — a feeling words will never capture.', svg:svgLove,      confetti:true},
+  A:{label:'Affection', desc:'Warmth and care blooming between two gentle souls.',     svg:svgAffection, confetti:true},
+  M:{label:'Marriage',  desc:"Destined to walk life's golden journey side by side.",  svg:svgMarriage,  confetti:true},
+  E:{label:'Enemies',   desc:'Sparks fly — but is it hate or something more?',        svg:svgEnemies,   confetti:false},
+  S:{label:'Siblings',  desc:"Thick as thieves, forever in each other's crazy story.",svg:svgSiblings,  confetti:false},
+};
+
+/* ════ GAME LOGIC ════ */
+function resetLetters(){['F','L','A','M','E','S'].forEach(l=>{document.getElementById('fl-'+l).className='fl-box';});}
+
+function calculate(){
+  const n1=document.getElementById('name1').value.trim();
+  const n2=document.getElementById('name2').value.trim();
+  if(!n1||!n2){if(!n1)shakeEl(document.getElementById('name1'));if(!n2)shakeEl(document.getElementById('name2'));return;}
+  resetLetters();
+  document.getElementById('result-section').style.display='none';
+
+  let a1=n1.toLowerCase().replace(/\s/g,'').split('');
+  let a2=n2.toLowerCase().replace(/\s/g,'').split('');
+  for(let i=0;i<a1.length;i++){const idx=a2.indexOf(a1[i]);if(idx!==-1){a1[i]=null;a2[idx]=null;}}
+  const count=a1.filter(Boolean).length+a2.filter(Boolean).length||1;
+
+  let flames=['F','L','A','M','E','S'];
+  let steps=[];let idx=0;
+  while(flames.length>1){idx=(idx+count-1)%flames.length;steps.push(flames[idx]);flames.splice(idx,1);if(idx===flames.length)idx=0;}
+  const winner=flames[0];
+
+  steps.forEach((l,i)=>setTimeout(()=>document.getElementById('fl-'+l).classList.add('eliminated'),i*240));
+  setTimeout(()=>{
+    document.getElementById('fl-'+winner).classList.add('winner');
+    showResult(winner,count,n1,n2);
+    if(DATA[winner].confetti)confettiBurst();
+  },steps.length*240+420);
+}
+
+function showResult(w,count,n1,n2){
+  const d=DATA[w];
+  document.getElementById('anim-stage').innerHTML=d.svg(n1,n2);
+  document.getElementById('res-word').textContent=d.label;
+  document.getElementById('res-desc').textContent=d.desc;
+  document.getElementById('res-count').textContent=`Score: ${count} letters remaining`;
+  document.getElementById('result-section').style.display='block';
+}
+
+function resetGame(){
+  document.getElementById('name1').value='';
+  document.getElementById('name2').value='';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('anim-stage').innerHTML='';
+  resetLetters();
+}
+
+function shakeEl(el){
+  el.style.animation='shake 0.4s ease';
+  el.style.borderColor='rgba(255,100,100,0.7)';
+  setTimeout(()=>{el.style.animation='';el.style.borderColor='';},500);
+}
+
+const confColors=['#ff6b9d','#ffb347','#c084fc','#67e8f9','#bbf7d0','#fde68a'];
+function confettiBurst(){
+  for(let i=0;i<70;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='confetti-piece';
+      c.style.cssText=`left:${20+Math.random()*60}%;top:${15+Math.random()*35}%;background:${confColors[Math.floor(Math.random()*confColors.length)]};animation-duration:${(Math.random()*0.8+1.2).toFixed(1)}s;animation-delay:${(Math.random()*0.3).toFixed(2)}s;transform:rotate(${Math.random()*360}deg);`;
+      document.body.appendChild(c);setTimeout(()=>c.remove(),2400);
+    },i*16);
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter')calculate();});
+</script>
+</body>
+</html>
